@@ -1,6 +1,8 @@
 from authentication.serilizers import RegistrationSerializers
 from authentication.models import User
 from django.db.models import Q
+
+
 class RegistrationRepository:
     @staticmethod
     def registration_repository(data):
