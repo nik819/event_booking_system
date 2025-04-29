@@ -7,13 +7,14 @@ class RegistrationRepository:
     @staticmethod
     def registration_repository(data):
         try:
-            serilizers=RegistrationSerializers(data=data)
-            if serilizers.is_valid():
-                serilizers.save()
-                return{'message':'Registration Successfully'}
-            return serilizers.error_messages
+            print("**********")
+            serializer = RegistrationSerializers(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return {'message': 'Registration Successful'}
+            return {'error': serializer.errors}
         except Exception as e:
-            return {'error':str(e)}
+            return {'error': str(e)}
         
     def login_repository(emailorusername,password):
         try:

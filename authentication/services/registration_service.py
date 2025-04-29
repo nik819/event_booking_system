@@ -10,7 +10,7 @@ class RegistrationService:
             return result
         except Exception as e:
             return{'error':str(e)}
-        
+
     def login_service(emailorusername,password):
         try:
             result=repo.login_repository(emailorusername,password)
