@@ -18,9 +18,10 @@ class Registration(APIView):
         except Exception as e:
             return Response({"error" : str(e)},  status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 class LoginController(APIView):
     permission_classes=[AllowAny]
-    def post(self,request):
+    def post(self, request):
         try:
             emailorusername=request.data.get('emailorusername')
             password=request.data.get('password')
