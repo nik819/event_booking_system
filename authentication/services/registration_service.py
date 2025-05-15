@@ -2,6 +2,7 @@ from authentication.repository.registration_repository import RegistrationReposi
 
 repo=RegistrationRepository
 
+
 class RegistrationService:
     @staticmethod
     def registration_service(data):
