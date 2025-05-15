@@ -14,5 +14,3 @@ class User(AbstractUser):
         return self.email
     class Meta:
         db_table = "user"
-
-# Create your models here.

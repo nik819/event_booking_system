@@ -18,14 +18,10 @@ class RegistrationRepository:
         
     def login_repository(emailorusername,password):
         try:
-            user=User.objects.filter(Q(email=emailorusername)|Q(username=emailorusername)).first()
+            user=User.objects.filter(Q(email=emailorusername) | Q(username=emailorusername)).first()
             if user and user.check_password(password):
                 return {'message':f'login successfully {user.first_name}'} 
             else:
                 return {'error':'Invalid Credancials'}
         except Exception as e:
             return {'error':str(e)}
-
-
-
-            
