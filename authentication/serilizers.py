@@ -4,7 +4,7 @@ from authentication.models import User
 class RegistrationSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['email', 'password', 'dateOfBirth', 'username']
+        fields = ['email', 'password', 'dateOfBirth', 'username', 'mobileNo', 'first_name', 'last_name']
         extra_kwargs = {
             'password': {'write_only': True},
         }
@@ -15,6 +15,9 @@ class RegistrationSerializers(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password'],
             dateOfBirth=validated_data['dateOfBirth'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            mobileNo=validated_data['mobileNo'],
         )
         user.save()
         return user
