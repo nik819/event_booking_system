@@ -1,7 +1,18 @@
-from authentication.repository.registration_repository import RegistrationRepository
-
+from authentication.repository.registration_repository import RegistrationRepository, LoginRepository
+import logging
 repo=RegistrationRepository
 
+
+class LoginService:
+    @staticmethod
+    def login_service(emailOrUsername,password):
+        logging.info("LoginService: Calling repository for user registration...")
+        try:
+            response = LoginRepository.login_repository(emailOrUsername,password)
+            return response 
+        except Exception as e:
+            logging.error(f"Registration failed: {str(e)}")
+            return {"error": str(e),"status": 500}
 
 class RegistrationService:
     @staticmethod
