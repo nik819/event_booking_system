@@ -1,4 +1,4 @@
-from authentication.repository.registration_repository import RegistrationRepository, LoginRepository
+from authentication.repository.registration_repository import RegistrationRepository, LoginRepository, ForgotPasswordRepository
 import logging
 repo=RegistrationRepository
 
@@ -28,4 +28,13 @@ class RegistrationService:
             result=repo.login_repository(emailorusername,password)
             return result
         except Exception as e:
-            return{'error':str(e)}      
+            return{'error':str(e)}
+
+class ForgotPasswordService:
+    @staticmethod
+    def forgot_password_service(email):
+        try:
+            result=ForgotPasswordRepository.forgot_password_repository(email)
+            return result
+        except Exception as e:
+            return{'error':str(e)}
