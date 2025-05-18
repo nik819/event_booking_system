@@ -10,7 +10,9 @@ def generate_otp():
 def send_otp_email(email, otp):
     subject = "Your OTP for Two Stap Verification"
     message = f"Use this OTP to complete your login: {otp}. It is valid for {OTP_CONFIG['otp_expiry']} seconds."
-    send_mail(subject, message, "no-reply@example.com", [email])
-    
+    from_email = "joshinikhil404@gmail.com"
+    send_mail(subject, message, from_email, [email])
+
 def send_otp_email_async(email, otp):
+    print("********", email, "*****", otp)
     threading.Thread(target=send_otp_email, args=(email, otp)).start()

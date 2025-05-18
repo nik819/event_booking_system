@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from authentication.services.registration_service import RegistrationService, LoginService
+from authentication.services.registration_service import RegistrationService, LoginService, ForgotPasswordService
 
 
 service=RegistrationService
@@ -36,6 +36,21 @@ class LoginController(APIView):
             if 'error' in response:
                 status_code = response.get('status', 400)
                 return Response({'message': response['error']}, status=status_code)
+            return Response(response, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'message':str(e)},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ForgotPasswordController(APIView):
+    permission_classes=[AllowAny]
+    def post(self,request):
+        try:
+            email = request.data.get('emailOrUsername')
+            print("_____________________", email)
+            if not email:
+                return Response({'message': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+            response=ForgotPasswordService.forgot_password_service(email)
+            if 'error' in response:
+                return Response({'message': response['error']}, status=status.HTTP_400_BAD_REQUEST)
             return Response(response, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'message':str(e)},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
