@@ -1,4 +1,4 @@
-from authentication.repository.registration_repository import RegistrationRepository, LoginRepository, ForgotPasswordRepository
+from authentication.repository.registration_repository import RegistrationRepository, LoginRepository, ForgotPasswordRepository,OtpVerificationRepository
 import logging
 repo=RegistrationRepository
 
@@ -38,3 +38,17 @@ class ForgotPasswordService:
             return result
         except Exception as e:
             return{'error':str(e)}
+        
+class OtpVerificationService:
+    @staticmethod
+    def otp_verification_service(userId,otp):
+        logging.info("OtpVerificationService: Calling repository for user otp verification")
+        try:
+            result = OtpVerificationRepository.otp_verification_repository(userId,otp)
+            if result.get('status')!=200:
+                status=result.get("status")
+                return result, status 
+            return result, status.HTTP_200_OK
+        except Exception as e:
+            logging.error(f"Registration failed: {str(e)}")
+            return {"error":str(e)}

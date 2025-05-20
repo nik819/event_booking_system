@@ -47,14 +47,8 @@ class LoginRepository:
         expiry_time=now()+timedelta(seconds=OTP_CONFIG['otp_expiry'])
         OTP.objects.create(user=user.id,otp=otp,expiresAt=expiry_time)
 
-class OtpVerificationRepository:
-    def generate_tokens(user, challenge):
-        refresh = RefreshToken.for_user(user)
-        return {
-            "challenge":challenge,
-            "refresh": str(refresh),
-            "access": str(refresh.access_token)
-        }
+
+    
 
 class RegistrationRepository:
     @staticmethod
@@ -69,6 +63,45 @@ class RegistrationRepository:
         except Exception as e:
             return {'error': str(e)}
 
+
+class OtpVerificationRepository:
+    def otp_verification_repository(userId,otp):
+        try:
+            current_time = now()
+            otp_expiry_time = current_time - timedelta(seconds=OTP_CONFIG['otp_expiry'])
+            # Fetch the latest OTP entry for the user
+            otp_entry = OTP.objects.filter(user=userId, isVerified=False, createdAt__gte=otp_expiry_time).order_by('-createdAt').first()
+            if not otp_entry:
+                return {"status": 410}
+            # Check if the user has exceeded the allowed attempt count
+            if otp_entry.attemptCount >= 3:
+                return {"status": 429}
+            # If OTP doesn't match, increment the attempt count
+            if otp_entry.otp != otp:
+                otp_entry.increment_attempts()
+                return {"status": 400}
+            # Verify OTP and update the record
+            user = User.objects.filter(id=userId).first()
+            if not user:
+                return {"status": 404}
+            response = OtpVerificationRepository.generate_tokens(user,user.allow2fa)
+            otp_entry.isVerified = True
+            otp_entry.save(update_fields=['isVerified'])
+            return response
+        except OTP.DoesNotExist:
+            return {"message": "OTP entry not found", "status": 404}
+        except Exception as e:
+            return {"message": "An error occurred in the repository: {}".format(str(e)),"status":500}
+        
+    # Generate JWT tokens
+    @staticmethod
+    def generate_tokens(user, challenge):
+        refresh = RefreshToken.for_user(user)
+        return {
+            "challenge":challenge,
+            "refresh": str(refresh),
+            "access": str(refresh.access_token)
+        }
 class ForgotPasswordRepository:
     @staticmethod
     def forgot_password_repository(email):

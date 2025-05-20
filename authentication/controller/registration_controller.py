@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from authentication.services.registration_service import RegistrationService, LoginService, ForgotPasswordService
+from authentication.services.registration_service import RegistrationService, LoginService, ForgotPasswordService,OtpVerificationService
 
 
 service=RegistrationService
@@ -54,3 +54,29 @@ class ForgotPasswordController(APIView):
             return Response(response, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'message':str(e)},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+# otpverification controller
+class OtpVerification(APIView):
+    permission_classes=[AllowAny]
+    def post(self,request):
+        try:
+            logging.info('otpverification api callig...')
+            user_id = request.data.get('userId')
+            otp = request.data.get('otp')
+            logging.info(f'request data  :{request.data}')
+            if not user_id or not otp:
+                return Response({'message': 'Email and OTP are required'}, status=status.HTTP_400_BAD_REQUEST)
+            # Call the service to verify OTP
+            response ,status_code= OtpVerificationService.otp_verification_service(user_id, otp)
+            if status_code == 429:
+                return Response({'message': 'Maximum OTP attempts exceeded. Please request a new OTP.'},status=status.HTTP_429_TOO_MANY_REQUESTS)
+            elif status_code == 410:
+                return Response({'message': 'OTP has expired.'},status=status.HTTP_410_GONE)
+            elif status_code == 404:
+                return Response({"message": "User not found"},status=status.HTTP_404_NOT_FOUND)
+            elif status_code == 400:
+                return Response({"message":"Invalid OTP"},status=status.HTTP_400_BAD_REQUEST)
+            else:  
+                return Response(response, status_code)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
