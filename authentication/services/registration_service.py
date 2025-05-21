@@ -1,4 +1,4 @@
-from authentication.repository.registration_repository import RegistrationRepository, LoginRepository, ForgotPasswordRepository,OtpVerificationRepository
+from authentication.repository.registration_repository import RegistrationRepository, LoginRepository, ForgotPasswordRepository,OtpVerificationRepository,RoleRepository
 import logging
 repo=RegistrationRepository
 
@@ -51,4 +51,24 @@ class OtpVerificationService:
             return result, status.HTTP_200_OK
         except Exception as e:
             logging.error(f"Registration failed: {str(e)}")
+            return {"error":str(e)}
+
+class OtpResendService:
+    @staticmethod
+    def resend_otp_service(userId):
+        logging.info("OtpResendService: Calling repository for resending OTP")
+        try:
+            result= OtpVerificationRepository.resend_otp(userId)
+            return result
+        except Exception as e:
+            logging.error(f"Resend OTP failed: {str(e)}")
+            return {"error": str(e)}
+class RoleService:
+    @staticmethod
+    def role_service(page,size):
+        try:
+            result,count=RoleRepository.role_repository(page,size)
+            return result,count
+        except Exception as e:
+            logging.error(f"Resend OTP failed: {str(e)}")
             return {"error":str(e)}

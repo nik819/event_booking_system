@@ -3,7 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from authentication.services.registration_service import RegistrationService, LoginService, ForgotPasswordService,OtpVerificationService
+from rest_framework_simplejwt.tokens import RefreshToken
+from authentication.services.registration_service import RegistrationService, LoginService, ForgotPasswordService,OtpVerificationService,OtpResendService,RoleService
 
 
 service=RegistrationService
@@ -45,7 +46,6 @@ class ForgotPasswordController(APIView):
     def post(self,request):
         try:
             email = request.data.get('emailOrUsername')
-            print("_____________________", email)
             if not email:
                 return Response({'message': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
             response=ForgotPasswordService.forgot_password_service(email)
@@ -78,5 +78,49 @@ class OtpVerification(APIView):
                 return Response({"message":"Invalid OTP"},status=status.HTTP_400_BAD_REQUEST)
             else:  
                 return Response(response, status_code)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class AccessTokenGenerate(APIView):
+    permission_classes=[AllowAny]
+    def post(self,request):
+        logging.info("accress token api calling....")
+        refresh_token=request.data.get('refresh')
+        if not refresh_token:
+                return Response({'message': 'Invalid RequestBody'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            refresh = RefreshToken(refresh_token)
+            new_access_token = str(refresh.access_token)
+            return Response({"access": new_access_token})
+        except Exception as e:
+            return Response({"error": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+class ResendOtpView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        try:
+            logging.info('Resend OTP API called...')
+            user_id = request.data.get('userId')
+            logging.info(f'request data  :{request.data}')
+            if not user_id:
+                return Response({'message': 'User ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Call the service to resend OTP
+            response= OtpResendService.resend_otp_service(user_id)
+            return Response(response,status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class RoleInformation(APIView):
+    permission_classes=[AllowAny]
+    def get(self,request):
+        logging.info('Role information api')
+        try:
+            # Call the service to resend OTP
+            page= int(request.query_params.get('page',1))
+            size= int(request.query_params.get('size',5))
+            response,count=RoleService.role_service(page,size)
+            return Response({'count':count,'resultset':response},status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
