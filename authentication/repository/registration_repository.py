@@ -1,13 +1,14 @@
 import logging
 import os
 from datetime import timedelta
+from django.contrib.auth.models import Group
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.db.models import Q
 from django.utils.timezone import now
 
-from authentication.serilizers import RegistrationSerializers
+from authentication.serilizers import RegistrationSerializers,GroupSerializer
 from authentication.models import User, OTP
 from authentication.utils.utils import send_otp_email_async, generate_otp
 from authentication.config.config import OTP_CONFIG
@@ -92,6 +93,25 @@ class OtpVerificationRepository:
             return {"message": "OTP entry not found", "status": 404}
         except Exception as e:
             return {"message": "An error occurred in the repository: {}".format(str(e)),"status":500}
+    @staticmethod
+    def resend_otp(userId):
+        try:
+            user = User.objects.filter(id=userId).first()
+            if not user:
+                return {"message": "User not found", "status": 404}
+            if os.getenv("DOCUMENTMANAGEMENT_LIVE") == "False":
+                logging.info(f'DOCUMENTMANAGEMENT_LIVE={os.getenv("DOCUMENTMANAGEMENT_LIVE")}')
+                otp_code = 1111
+            else:
+                otp_code = generate_otp()
+            expiry_time = now() + timedelta(seconds=OTP_CONFIG['otp_expiry'])
+            OTP.objects.create(user=user.id, otp=otp_code, expiresAt=expiry_time)
+            send_otp_email_async(user.email, otp_code)
+            
+            return {"message": "OTP resent successfully","userId": str(user.id)}
+        except Exception as e:
+            logging.error(f"Resend OTP failed: {str(e)}")
+            return {"error": str(e)},
         
     # Generate JWT tokens
     @staticmethod
@@ -102,6 +122,17 @@ class OtpVerificationRepository:
             "refresh": str(refresh),
             "access": str(refresh.access_token)
         }
+class RoleRepository:
+    def role_repository(page,size):
+        try:
+            off_set=(page-1)*size
+            counts=Group.objects.count()
+            result=Group.objects.all()[off_set:off_set+size]
+            serilizers=GroupSerializer(result,many=True)
+            return serilizers.data,counts
+        except Exception as e:
+            return {'error':str(e)}
+
 class ForgotPasswordRepository:
     @staticmethod
     def forgot_password_repository(email):
@@ -114,9 +145,9 @@ class ForgotPasswordRepository:
                 return {"error": f"User is {block_reason}. Contact support."}
             otp_code = generate_otp()
             print("----------", otp_code)
-            ForgotPasswordRepository.store_otp(user, otp_code)
+            ForgotPasswordRepository.store_otp(user.id, otp_code)
             send_otp_email_async(user.email, otp_code)
-            return {'message': 'OTP sent to your email'}
+            return {'message': 'OTP sent to your email', 'userId': str(user.id)}
         except Exception as e:
             return {'error': str(e)}
     
